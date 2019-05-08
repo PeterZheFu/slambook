@@ -4,6 +4,30 @@ using namespace std;
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/opencv.hpp>
+
+void MatType(cv::Mat inputMat )
+{
+    int inttype = inputMat.type();
+
+    string r, a;
+    uchar depth = inttype & CV_MAT_DEPTH_MASK;
+    uchar chans = 1 + (inttype >> CV_CN_SHIFT);
+    switch ( depth ) {
+        case CV_8U:  r = "8U";   a = "Mat.at<uchar>(y,x)"; break;
+        case CV_8S:  r = "8S";   a = "Mat.at<schar>(y,x)"; break;
+        case CV_16U: r = "16U";  a = "Mat.at<ushort>(y,x)"; break;
+        case CV_16S: r = "16S";  a = "Mat.at<short>(y,x)"; break;
+        case CV_32S: r = "32S";  a = "Mat.at<int>(y,x)"; break;
+        case CV_32F: r = "32F";  a = "Mat.at<float>(y,x)"; break;
+        case CV_64F: r = "64F";  a = "Mat.at<double>(y,x)"; break;
+        default:     r = "User"; a = "Mat.at<UKNOWN>(y,x)"; break;
+    }
+    r += "C";
+    r += (chans+'0');
+    cout << "Mat is of type " << r << " and should be accessed with " << a << endl;
+}
 
 int main ( int argc, char** argv )
 {
@@ -13,10 +37,11 @@ int main ( int argc, char** argv )
     // 判断图像文件是否正确读取
     if ( image.data == nullptr ) //数据不存在,可能是文件不存在
     {
-        cerr<<"文件"<<argv[1]<<"不存在."<<endl;
+        cerr<<"File"<<argv[1]<<"dows not exist."<<endl;
         return 0;
     }
-    
+    MatType(image);
+
     // 文件顺利读取, 首先输出一些基本信息
     cout<<"图像宽为"<<image.cols<<",高为"<<image.rows<<",通道数为"<<image.channels()<<endl;
     cv::imshow ( "image", image );      // 用cv::imshow显示图像
@@ -58,13 +83,34 @@ int main ( int argc, char** argv )
     image_another ( cv::Rect ( 0,0,100,100 ) ).setTo ( 0 ); // 将左上角100*100的块置零
     cv::imshow ( "image", image );
     cv::waitKey ( 0 );
-    
+
     // 使用clone函数来拷贝数据
     cv::Mat image_clone = image.clone();
     image_clone ( cv::Rect ( 0,0,100,100 ) ).setTo ( 255 );
     cv::imshow ( "image", image );
     cv::imshow ( "image_clone", image_clone );
     cv::waitKey ( 0 );
+
+    // sobel filter
+    cout<< "sobel filter"<<endl;
+
+    cv::Mat grey;
+    cv::cvtColor(image, grey, CV_RGB2GRAY);
+    MatType(grey);
+
+    cv::Mat sobelx;
+    cv::Sobel(grey, sobelx, CV_32F, 1, 0);
+
+    double minVal, maxVal;
+    minMaxLoc(sobelx, &minVal, &maxVal); //find min and max intensities
+    cv::Mat draw;
+    sobelx.convertTo(draw, CV_8U, 255.0/(maxVal - minVal), -minVal * 255.0/(maxVal - minVal));
+    MatType(draw);
+
+    cv::namedWindow("image_sobel", CV_WINDOW_AUTOSIZE);
+    cv::imshow("image", draw);
+    cv::waitKey();
+
 
     // 对于图像还有很多基本的操作,如剪切,旋转,缩放等,限于篇幅就不一一介绍了,请参看OpenCV官方文档查询每个函数的调用方法.
     cv::destroyAllWindows();

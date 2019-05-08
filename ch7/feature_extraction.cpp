@@ -76,8 +76,8 @@ int main ( int argc, char** argv )
     Mat img_goodmatch;
     drawMatches ( img_1, keypoints_1, img_2, keypoints_2, matches, img_match );
     drawMatches ( img_1, keypoints_1, img_2, keypoints_2, good_matches, img_goodmatch );
-    imshow ( "所有匹配点对", img_match );
-    imshow ( "优化后匹配点对", img_goodmatch );
+    imshow ( "All matching point pairs", img_match );
+    imshow ( "Matching point points after optimzation", img_goodmatch );
     waitKey(0);
 
     return 0;
